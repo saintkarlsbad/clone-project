@@ -5,7 +5,7 @@ import Paper from "material-ui/Paper";
 import moment from 'moment';
 import { styles } from '../../Styling/Styling';
 import { Link } from 'react-router-dom';
-import { createReservation } from '../../ducks/reducer';
+import { setDateIn, setDateOut, setGuestAmount } from '../../ducks/reducer';
 import DatePicker from 'material-ui/DatePicker/DatePicker';
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
@@ -19,21 +19,23 @@ class NewReservations extends Component {
             guestAmount: '',
             calculation: ''
         }
-        this.handleChange = this.handleChange.bind(this);
+        //this.handleChange = this.handleChange.bind(this);
         this.paymentOwed = this.paymentOwed.bind(this)
     }
 
-    componentDidMount() {
-        const {reservation_id} = this.props.match.params
-    }
+    // componentDidMount() {
+    //     const { reservation_id } = this.props.match.params
+    // }
 
-    handleChange(value) {
-        this.setState({
-            dateIn: value,
-            dateOut: value,
-            guestAmount: value
-        })
-    }
+    // handleChange(value) {
+    //     console.log(value, 'handle change')
+    //     this.setState({
+    //         dateIn: value,
+    //         dateOut: value,
+    //         guestAmount: value
+    //     })
+    //     this.paymentOwed()
+    // }
 
     paymentOwed() {
         this.setState({
@@ -41,17 +43,28 @@ class NewReservations extends Component {
         })
     }
 
-    render() {
+    createReservation() {
+        //const { reservation_id } = this.props.match.params
+        const { dateIn, dateOut, guestAmount } = this.props
 
+        axios.post('/createReservation', { dateIn, dateOut, guestAmount })
+        alert('You must make a payment in order to receive your Door Code')
+        this.props.history.push('/UserDashboard')
+    }
+
+    render() {
+        // console.log(this.props.createReservation, 'createReservation function')
         return (
-            <div className='reservations-container'>
+            <div className='newResBox'>
                 <Paper style={styles.userReservation.paper}>
-                    <h2>New Reservations</h2>
+                    <h2 style={styles.userReservation.header}>NEW RESERVATION</h2>
+                    <br />
+                    <br />
                     <DatePicker
                         autoOk={true}
                         placeholder='Check-In-Date'
                         formatDate={(date) => moment(date).format("YYYY-MM-DD")}
-                        onChange={(event, value, index) => this.handleChange(value)}
+                        onChange={(event, value, index) => this.props.setDateIn(value)}
                         id='uniqueid'
                         shouldDisableDate={
                             function disablePastDates(date) {
@@ -59,11 +72,12 @@ class NewReservations extends Component {
                                 return false;
                             }}
                     />
+                    <br />
                     <DatePicker
                         placeholder='Check-Out-Date'
                         id='uniqueid'
                         formatDate={(date) => moment(date).format("YYYY-MM-DD")}
-                        onChange={(event, value, index) => this.handleChange(value)}
+                        onChange={(event, value, index) => this.props.setDateOut(value)}
                         autoOk={true}
                         shouldDisableDate={
                             function disablePastDates(date) {
@@ -71,25 +85,36 @@ class NewReservations extends Component {
                                 return false;
                             }}
                     />
-                    <select value={this.state.value} onChange={(event, value, index) => { this.handleChange(value, () => { this.paymentOwed() }) }} >
-                        <option disabled=''>number of Guests (6 max)</option>
-                        <option>1 guest</option>
-                        <option>2 guests</option>
-                        <option>3 guests</option>
-                        <option>4 guests</option>
-                        <option>5 guests</option>
-                        <option>6 guests</option>
+                    <br />
+                    <br />
+                    <br />
+                    <select placeholder={this.props.guestAmount} onChange={(e) => { this.props.setGuestAmount(e.target.value), this.paymentOwed() }} style={styles.userReservation.select}>
+                        <option disabled=''>Number of Guests</option>
+                        <option value='1 guest'>1 guest</option>
+                        <option value='2 guests'>2 guests</option>
+                        <option value='3 guests'>3 guests</option>
+                        <option value='4 guests'>4 guests</option>
+                        <option value='5 guests'>5 guests</option>
+                        <option value='6 guests'>6 guests</option>
                     </select>
+                    <br />
                     <br />
                     <TextField disabled={true} value={this.state.calculation ? this.state.calculation : ''}></TextField>
                     <br />
                     <br />
+                    <Link to='/UserDashboard'> <RaisedButton className='reserved' >Cancel</RaisedButton></Link>
                     <br />
-                    <RaisedButton onClick={() => this.props.createReservation(this.props.match.params.reservation_id, this.state.dateIn, this.state.dateOut, this.state.guestAmount)}>Reserve</RaisedButton>
+                    <br />
+                    <RaisedButton onClick={() => this.createReservation()}>Reserve</RaisedButton>
+                    <br />
+                    <br />
+                    <p style={styles.userReservation.p}>***</p>
+                    <p style={styles.userReservation.p}> You must cancel or edit your reservation within 48 hours of your scheduled stay in order to receive a full refund </p>
+                    <p style={styles.userReservation.p}>***</p>
+                    
                 </Paper>
                 <div>
-                    <Link to='/UserDashboard'> <button className='reserve' >Go Back</button> </Link>
-                    <Link to='/'> <button className='reserve' >Logout</button> </Link>
+
                 </div>
 
             </div>
@@ -99,13 +124,18 @@ class NewReservations extends Component {
 
 
 let actions = {
-    createReservation
+    setDateIn,
+    setDateOut,
+    setGuestAmount
 }
 
 function mapStateToProps(state) {
-    const { reservations } = state;
+    const { reservations, dateIn, dateOut, guestAmount } = state;
     return {
-        reservations
+        reservations,
+        dateIn,
+        dateOut,
+        guestAmount
     }
 }
 

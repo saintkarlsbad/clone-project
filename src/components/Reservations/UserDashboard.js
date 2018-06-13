@@ -4,8 +4,9 @@ import { connect } from "react-redux";
 import { Link } from "react-router-dom";
 import RaisedButton from "material-ui/RaisedButton";
 import moment from "moment";
-import { styles } from '../../Styling/Styling';
+import { styles, colors } from '../../Styling/Styling';
 import Paper from "material-ui/Paper";
+import Chip from "material-ui/Chip";
 import {
     Table,
     TableBody,
@@ -14,13 +15,12 @@ import {
     TableRow,
     TableRowColumn
 } from "material-ui/Table";
-import { getUserReservations, deleteReservation } from "../../ducks/reducer";
+import { getUserReservations } from "../../ducks/reducer";
 
 class UserDashboard extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            deleteReservation: false,
             userData: {}
         }
     }
@@ -34,6 +34,13 @@ class UserDashboard extends Component {
 
     paymentOwed() {
         return '$' + Math.floor((Math.random() + 1) * 25) + '.00';
+    }
+
+    deleteReservation(reservation_id) {
+
+        axios.delete(`/cancelUserReservation/${reservation_id}`).then(res => {
+            this.props.getUserReservations()
+        })
     }
 
     showTableHeader() {
@@ -50,13 +57,13 @@ class UserDashboard extends Component {
                         # of Guests
                     </TableHeaderColumn>
                     <TableHeaderColumn style={styles.table.tableFont.header}>
-                        Price
-                    </TableHeaderColumn>
-                    <TableHeaderColumn style={styles.table.tableFont.header}>
                         Edit
                     </TableHeaderColumn>
                     <TableHeaderColumn style={styles.table.tableFont.header}>
                         Delete
+                    </TableHeaderColumn>
+                    <TableHeaderColumn style={styles.table.tableFont.header}>
+                        Payments
                     </TableHeaderColumn>
                 </TableRow>
             </TableHeader>
@@ -72,15 +79,9 @@ class UserDashboard extends Component {
             )
         } else {
             return reservations.map((reservation, index) => {
-                <RaisedButton
-                    label='Delete'
-                    onClick={() => {
-                        this.props.deleteReservation(reservation.reservation_id)
-                    }}
-                />
-                console.log(this.props.deleteReservation, 'delete button')
+                //console.log(this.props.deleteReservation, 'delete button')
                 return (
-                    <TableRow key={index}>
+                    <TableRow key={index} >
                         <TableRowColumn style={styles.table.tableFont.row}>
                             {moment(reservation.date_in).format("YYYY-MM-DD")}
                         </TableRowColumn>
@@ -91,13 +92,22 @@ class UserDashboard extends Component {
                             {reservation.guests}
                         </TableRowColumn>
                         <TableRowColumn style={styles.table.tableFont.row}>
-                            {reservation ? this.paymentOwed() : ''}
+                            <Link to={`/UserReservations/${reservation.reservation_id}`}><RaisedButton label='Edit' /></Link>
                         </TableRowColumn>
                         <TableRowColumn style={styles.table.tableFont.row}>
-                            <Link to={`/UserReservations/${reservation.reservation_id}`}><RaisedButton>Edit</RaisedButton></Link>
+                            <RaisedButton
+                                label='Delete'
+                                onClick={() => {
+                                    this.deleteReservation(reservation.reservation_id)
+                                }}
+                            />
                         </TableRowColumn>
-                        <TableRowColumn style={styles.table.tableFont.row}>
-                            <RaisedButton>Delete</RaisedButton>
+                        <TableRowColumn >
+                            {reservation.price === true ?
+                                <RaisedButton label='paid' disabled={true} />
+                                :
+                                <Link to={`/Checkout/${reservation.reservation_id}`} ><RaisedButton label='pay now' /></Link>
+                            }
                         </TableRowColumn>
                     </TableRow>
                 )
@@ -105,19 +115,19 @@ class UserDashboard extends Component {
         }
     }
 
-
-
     render() {
-        // console.log(this.props.reservations)
+        console.log('HELLOOOOOO')
         return (
             <div className='container'>
                 <Paper style={styles.table.paper} >
-                    <h3>{this.state.userData.first_name}'s Reservations</h3>
-                    <Link to='/'><button className='reserve'>Logout</button></Link>
-                    <Link to='/NewReservation'><button className='reserve'>Add Trip</button></Link>
+                    <h2 style={styles.table.header}>{this.state.userData.first_name}'s Reservations</h2>
+                    <Link to='/NewReservation'><button className='reserve'>ADD TRIP</button></Link>
+                    <Link to='/Display'><button className='reserve'>ABOUT</button></Link>
+                    <a href={`${process.env.REACT_APP_LOGOUT}`}><button className='reserve'>LOGOUT</button></a>
+                    <br/>
                     <Table>
                         {this.showTableHeader()}
-                        <TableBody displayRowCheckbox={false}>
+                        <TableBody displayRowCheckbox={false} >
                             {this.props.reservations ?
                                 this.showReservations(this.props.reservations) : ''}
                         </TableBody>
@@ -129,8 +139,7 @@ class UserDashboard extends Component {
 }
 
 let actions = {
-    getUserReservations, 
-    deleteReservation
+    getUserReservations
 }
 
 function mapStateToProps(state) {

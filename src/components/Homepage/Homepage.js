@@ -93,7 +93,7 @@ class Homepage extends Component {
                         <span style={styles} style={styles3}>Lodges</span>
                     </div>
                     <div>
-                   <Link to='/About1'> <button className='login' style={styles4}>About</button> </Link>
+                   <Link to='/Display'> <button className='login' style={styles4}>About</button> </Link>
                    <a href={process.env.REACT_APP_LOGIN}> <button className='login' style={styles4}>Login</button> </a>
                    {/* <Link to='/UserDashboard'> <button className='login' style={styles4}>Login</button> </Link> */}
                 </div>
